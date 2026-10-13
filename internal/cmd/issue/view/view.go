@@ -20,13 +20,17 @@ const (
 # Show 5 recent comments when viewing the issue
 $ jira issue view ISSUE-1 --comments 5
 
+# Skip fetching available transitions
+$ jira issue view ISSUE-1 --no-transitions
+
 # Get the raw JSON data
 $ jira issue view ISSUE-1 --raw`
 
-	flagRaw      = "raw"
-	flagDebug    = "debug"
-	flagComments = "comments"
-	flagPlain    = "plain"
+	flagRaw         = "raw"
+	flagDebug       = "debug"
+	flagComments    = "comments"
+	flagPlain       = "plain"
+	flagTransitions = "transitions"
 
 	configProject = "project.key"
 	configServer  = "server"
@@ -51,6 +55,7 @@ func NewCmdView() *cobra.Command {
 
 	cmd.Flags().Uint(flagComments, 1, "Show N comments")
 	cmd.Flags().Bool(flagPlain, false, "Display output in plain mode")
+	cmd.Flags().Bool(flagTransitions, true, "Fetch available transitions")
 	cmd.Flags().Bool(flagRaw, false, "Print raw Jira API response")
 
 	return &cmd
@@ -99,12 +104,29 @@ func viewPretty(cmd *cobra.Command, args []string) {
 	}
 
 	key := cmdutil.GetJiraIssueKey(viper.GetString(configProject), args[0])
-	iss, err := func() (*jira.Issue, error) {
+	iss, trs, err := func() (*jira.Issue, []*jira.Transition, error) {
 		s := cmdutil.Info(messageFetchingData)
 		defer s.Stop()
 
 		client := api.DefaultClient(debug)
-		return api.ProxyGetIssue(client, key, issue.NewNumCommentsFilter(comments))
+
+		iss, err := api.ProxyGetIssue(client, key, issue.NewNumCommentsFilter(comments))
+		if err != nil {
+			return nil, nil, err
+		}
+
+		withTransitions, err := cmd.Flags().GetBool(flagTransitions)
+		if err != nil {
+			return nil, nil, err
+		}
+		if !withTransitions {
+			return iss, nil, nil
+		}
+
+		// Transitions are a nice-to-have; don't fail the whole view if they aren't available.
+		trs, _ := api.ProxyTransitions(client, key)
+
+		return iss, trs, nil
 	}()
 	cmdutil.ExitIfError(err)
 
@@ -112,10 +134,11 @@ func viewPretty(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(err)
 
 	v := tuiView.Issue{
-		Server:  viper.GetString(configServer),
-		Data:    iss,
-		Display: tuiView.DisplayFormat{Plain: plain},
-		Options: tuiView.IssueOption{NumComments: comments},
+		Server:      viper.GetString(configServer),
+		Data:        iss,
+		Transitions: trs,
+		Display:     tuiView.DisplayFormat{Plain: plain},
+		Options:     tuiView.IssueOption{NumComments: comments},
 	}
 	cmdutil.ExitIfError(v.Render())
 }

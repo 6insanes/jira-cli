@@ -47,10 +47,11 @@ type IssueOption struct {
 
 // Issue is a list view for issues.
 type Issue struct {
-	Server  string
-	Data    *jira.Issue
-	Display DisplayFormat
-	Options IssueOption
+	Server      string
+	Data        *jira.Issue
+	Transitions []*jira.Transition
+	Display     DisplayFormat
+	Options     IssueOption
 }
 
 // Render renders the view.
@@ -108,6 +109,9 @@ func (i Issue) String() string {
 	if len(i.Data.Fields.IssueLinks) > 0 {
 		fmt.Fprintf(&s, "\n\n%s\n\n%s\n", i.separator("Linked Issues"), i.linkedIssues())
 	}
+	if len(i.Transitions) > 0 {
+		fmt.Fprintf(&s, "\n\n%s\n\n%s\n", i.separator("Available Transitions"), i.transitions())
+	}
 	total := i.Data.Fields.Comment.Total
 	if total > 0 && i.Options.NumComments > 0 {
 		sep := fmt.Sprintf("%d Comments", total)
@@ -155,6 +159,17 @@ func (i Issue) fragments() []fragment {
 			fragment{Body: i.separator("Linked Issues")},
 			newBlankFragment(2),
 			fragment{Body: i.linkedIssues()},
+			newBlankFragment(1),
+		)
+	}
+
+	if len(i.Transitions) > 0 {
+		scraps = append(
+			scraps,
+			newBlankFragment(1),
+			fragment{Body: i.separator("Available Transitions")},
+			newBlankFragment(2),
+			fragment{Body: i.transitions()},
 			newBlankFragment(1),
 		)
 	}
@@ -369,6 +384,43 @@ func (i Issue) linkedIssues() string {
 	}
 
 	return linked.String()
+}
+
+func (i Issue) transitions() string {
+	if len(i.Transitions) == 0 {
+		return ""
+	}
+
+	var (
+		transitions  strings.Builder
+		maxNameLen   int
+		maxTargetLen int
+	)
+
+	for _, t := range i.Transitions {
+		maxNameLen = max(len(t.Name), maxNameLen)
+		target := t.To.Name
+		if target == "" {
+			target = "(unknown)"
+		}
+		maxTargetLen = max(len(target), maxTargetLen)
+	}
+
+	for _, t := range i.Transitions {
+		target := t.To.Name
+		if target == "" {
+			target = "(unknown)"
+		}
+		fmt.Fprintf(
+			&transitions,
+			"  %s  %s  %s\n",
+			coloredOut(pad(t.Name, maxNameLen), color.FgGreen, color.Bold),
+			gray("->"),
+			pad(target, maxTargetLen),
+		)
+	}
+
+	return transitions.String()
 }
 
 func (i Issue) comments() []issueComment {

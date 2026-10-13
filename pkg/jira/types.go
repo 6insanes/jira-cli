@@ -180,9 +180,16 @@ type Sprint struct {
 
 // Transition holds issue transition info.
 type Transition struct {
-	ID          json.Number `json:"id"`
-	Name        string      `json:"name"`
-	IsAvailable bool        `json:"isAvailable"`
+	ID          json.Number      `json:"id"`
+	Name        string           `json:"name"`
+	IsAvailable bool             `json:"isAvailable"`
+	To          TransitionTarget `json:"to,omitempty"`
+}
+
+// TransitionTarget holds the status a transition leads to.
+type TransitionTarget struct {
+	ID   string `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 // User holds user info.

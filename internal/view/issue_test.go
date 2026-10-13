@@ -2,8 +2,10 @@ package view
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 
+	"github.com/fatih/color"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/adf"
@@ -85,6 +87,110 @@ func TestIssueDetailsRenderInPlainView(t *testing.T) {
 
 	assert.NoError(t, issue.renderPlain(&b))
 	assert.Equal(t, tui.TextData(expected), tui.TextData(actual))
+}
+
+func TestIssueDetailsWithTransitionsInPlainView(t *testing.T) {
+	t.Parallel()
+
+	data := &jira.Issue{
+		Key: "TEST-1",
+		Fields: jira.IssueFields{
+			Summary: "This is a test",
+			IssueType: jira.IssueType{
+				Name: "Bug",
+			},
+			Assignee: struct {
+				Name string `json:"displayName"`
+			}{Name: "Person A"},
+			Priority: struct {
+				Name string `json:"name"`
+			}{Name: "High"},
+			Reporter: struct {
+				Name string `json:"displayName"`
+			}{Name: "Person Z"},
+			Status: struct {
+				Name string `json:"name"`
+			}{Name: "Done"},
+			Comment: struct {
+				Comments []struct {
+					ID      string      `json:"id"`
+					Author  jira.User   `json:"author"`
+					Body    interface{} `json:"body"`
+					Created string      `json:"created"`
+				} `json:"comments"`
+				Total int `json:"total"`
+			}{Total: 0},
+			Watches: struct {
+				IsWatching bool `json:"isWatching"`
+				WatchCount int  `json:"watchCount"`
+			}{IsWatching: false, WatchCount: 0},
+			Created: "2020-12-13T14:05:20.974+0100",
+			Updated: "2020-12-13T14:07:20.974+0100",
+		},
+	}
+
+	issue := Issue{
+		Server: "https://test.local",
+		Data:   data,
+		Transitions: []*jira.Transition{
+			{ID: "11", Name: "Reopen", To: jira.TransitionTarget{ID: "3", Name: "In Progress"}},
+			{ID: "21", Name: "Done", To: jira.TransitionTarget{ID: "10001", Name: "Done"}},
+		},
+		Display: DisplayFormat{Plain: true},
+	}
+
+	actual := issue.String()
+
+	assert.Contains(t, actual, "Available Transitions")
+	assert.Contains(t, actual, fmt.Sprintf("%s  %s  %s", coloredOut(pad("Reopen", 6), color.FgGreen, color.Bold), gray("->"), pad("In Progress", 11)))
+	assert.Contains(t, actual, fmt.Sprintf("%s  %s  %s", coloredOut(pad("Done", 6), color.FgGreen, color.Bold), gray("->"), pad("Done", 11)))
+}
+
+func TestIssueDetailsWithoutTransitions(t *testing.T) {
+	t.Parallel()
+
+	data := &jira.Issue{
+		Key: "TEST-1",
+		Fields: jira.IssueFields{
+			Summary:   "This is a test",
+			IssueType: jira.IssueType{Name: "Bug"},
+			Assignee: struct {
+				Name string `json:"displayName"`
+			}{Name: "Person A"},
+			Priority: struct {
+				Name string `json:"name"`
+			}{Name: "High"},
+			Reporter: struct {
+				Name string `json:"displayName"`
+			}{Name: "Person Z"},
+			Status: struct {
+				Name string `json:"name"`
+			}{Name: "Done"},
+			Comment: struct {
+				Comments []struct {
+					ID      string      `json:"id"`
+					Author  jira.User   `json:"author"`
+					Body    interface{} `json:"body"`
+					Created string      `json:"created"`
+				} `json:"comments"`
+				Total int `json:"total"`
+			}{Total: 0},
+			Watches: struct {
+				IsWatching bool `json:"isWatching"`
+				WatchCount int  `json:"watchCount"`
+			}{IsWatching: false, WatchCount: 0},
+			Created: "2020-12-13T14:05:20.974+0100",
+			Updated: "2020-12-13T14:07:20.974+0100",
+		},
+	}
+
+	issue := Issue{
+		Server:  "https://test.local",
+		Data:    data,
+		Display: DisplayFormat{Plain: true},
+	}
+
+	assert.NotContains(t, issue.String(), "Available Transitions")
 }
 
 func TestIssueDetailsWithV2Description(t *testing.T) {

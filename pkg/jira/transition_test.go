@@ -50,16 +50,19 @@ func TestTransitions(t *testing.T) {
 			ID:          "11",
 			Name:        "To Do",
 			IsAvailable: true,
+			To:          TransitionTarget{ID: "10001", Name: "To Do"},
 		},
 		{
 			ID:          "21",
 			Name:        "In Progress",
 			IsAvailable: true,
+			To:          TransitionTarget{ID: "10002", Name: "In Progress"},
 		},
 		{
 			ID:          "31",
 			Name:        "Done",
 			IsAvailable: false,
+			To:          TransitionTarget{ID: "10003", Name: "Done"},
 		},
 	}
 	assert.Equal(t, expected, actual)
