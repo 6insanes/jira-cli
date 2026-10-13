@@ -142,8 +142,8 @@ func TestIssueDetailsWithTransitionsInPlainView(t *testing.T) {
 	actual := issue.String()
 
 	assert.Contains(t, actual, "Available Transitions")
-	assert.Contains(t, actual, fmt.Sprintf("%s  %s  %s", coloredOut(pad("Reopen", 6), color.FgGreen, color.Bold), gray("->"), pad("In Progress", 11)))
-	assert.Contains(t, actual, fmt.Sprintf("%s  %s  %s", coloredOut(pad("Done", 6), color.FgGreen, color.Bold), gray("->"), pad("Done", 11)))
+	assert.Contains(t, actual, fmt.Sprintf("- %s  %s  %s\n", coloredOut(pad("Reopen", 6), color.FgGreen, color.Bold), gray("->"), pad("In Progress", 11)))
+	assert.Contains(t, actual, fmt.Sprintf("- %s  %s  %s\n", coloredOut(pad("Done", 6), color.FgGreen, color.Bold), gray("->"), pad("Done", 11)))
 }
 
 func TestIssueDetailsWithoutTransitions(t *testing.T) {

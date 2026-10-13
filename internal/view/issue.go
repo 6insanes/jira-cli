@@ -411,9 +411,11 @@ func (i Issue) transitions() string {
 		if target == "" {
 			target = "(unknown)"
 		}
+		// Markdown list items are rendered one-per-line by every renderer,
+		// unlike plain consecutive lines which get glued into a paragraph.
 		fmt.Fprintf(
 			&transitions,
-			"  %s  %s  %s\n",
+			"- %s  %s  %s\n",
 			coloredOut(pad(t.Name, maxNameLen), color.FgGreen, color.Bold),
 			gray("->"),
 			pad(target, maxTargetLen),
