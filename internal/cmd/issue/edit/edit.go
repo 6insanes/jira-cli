@@ -32,7 +32,10 @@ $ jira issue edit ISSUE-1 -s"New updated summary" --no-input
 $ echo "Description from stdin" | jira issue edit ISSUE-1 -s"New updated summary"  --no-input
 
 # Use minus (-) to remove label, component or fixVersion
-$ jira issue edit ISSUE-1 --label -urgent --component -BE --fix-version -v1.0`
+$ jira issue edit ISSUE-1 --label -urgent --component -BE --fix-version -v1.0
+
+# Update the original estimate
+$ jira issue edit ISSUE-1 -e"2d"`
 )
 
 // NewCmdEdit is an edit command.
@@ -148,16 +151,17 @@ func edit(cmd *cobra.Command, args []string) {
 		}
 
 		edr := jira.EditRequest{
-			ParentIssueKey:  parent,
-			Summary:         params.summary,
-			Body:            body,
-			Priority:        params.priority,
-			Labels:          labels,
-			Components:      components,
-			FixVersions:     fixVersions,
-			AffectsVersions: affectsVersions,
-			CustomFields:    params.customFields,
-			SkipNotify:      params.skipNotify,
+			ParentIssueKey:   parent,
+			Summary:          params.summary,
+			Body:             body,
+			Priority:         params.priority,
+			Labels:           labels,
+			Components:       components,
+			FixVersions:      fixVersions,
+			AffectsVersions:  affectsVersions,
+			CustomFields:     params.customFields,
+			OriginalEstimate: params.originalEstimate,
+			SkipNotify:       params.skipNotify,
 		}
 		if configuredCustomFields, err := cmdcommon.GetConfiguredCustomFields(); err == nil {
 			cmdcommon.ValidateCustomFields(edr.CustomFields, configuredCustomFields)
@@ -301,20 +305,21 @@ func (ec *editCmd) askQuestions(issue *jira.Issue, originalBody string) error {
 }
 
 type editParams struct {
-	issueKey        string
-	parentIssueKey  string
-	summary         string
-	body            string
-	priority        string
-	assignee        string
-	labels          []string
-	components      []string
-	fixVersions     []string
-	affectsVersions []string
-	customFields    map[string]string
-	skipNotify      bool
-	noInput         bool
-	debug           bool
+	issueKey         string
+	parentIssueKey   string
+	summary          string
+	body             string
+	priority         string
+	assignee         string
+	labels           []string
+	components       []string
+	fixVersions      []string
+	affectsVersions  []string
+	customFields     map[string]string
+	originalEstimate string
+	skipNotify       bool
+	noInput          bool
+	debug            bool
 }
 
 func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *editParams {
@@ -348,6 +353,9 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *e
 	custom, err := flags.GetStringToString("custom")
 	cmdutil.ExitIfError(err)
 
+	originalEstimate, err := flags.GetString("original-estimate")
+	cmdutil.ExitIfError(err)
+
 	skipNotify, err := flags.GetBool("skip-notify")
 	cmdutil.ExitIfError(err)
 
@@ -358,20 +366,21 @@ func parseArgsAndFlags(flags query.FlagParser, args []string, project string) *e
 	cmdutil.ExitIfError(err)
 
 	return &editParams{
-		issueKey:        cmdutil.GetJiraIssueKey(project, args[0]),
-		parentIssueKey:  parentIssueKey,
-		summary:         summary,
-		body:            body,
-		priority:        priority,
-		assignee:        assignee,
-		labels:          labels,
-		components:      components,
-		fixVersions:     fixVersions,
-		affectsVersions: affectsVersions,
-		customFields:    custom,
-		skipNotify:      skipNotify,
-		noInput:         noInput,
-		debug:           debug,
+		issueKey:         cmdutil.GetJiraIssueKey(project, args[0]),
+		parentIssueKey:   parentIssueKey,
+		summary:          summary,
+		body:             body,
+		priority:         priority,
+		assignee:         assignee,
+		labels:           labels,
+		components:       components,
+		fixVersions:      fixVersions,
+		affectsVersions:  affectsVersions,
+		customFields:     custom,
+		originalEstimate: originalEstimate,
+		skipNotify:       skipNotify,
+		noInput:          noInput,
+		debug:            debug,
 	}
 }
 
@@ -451,6 +460,7 @@ func setFlags(cmd *cobra.Command) {
 	cmd.Flags().StringArray("fix-version", []string{}, "Add/Append release info (fixVersions)")
 	cmd.Flags().StringArray("affects-version", []string{}, "Add/Append release info (affectsVersions)")
 	cmd.Flags().StringToString("custom", custom, "Edit custom fields")
+	cmd.Flags().StringP("original-estimate", "e", "", "Edit original estimate, eg: 2d")
 	cmd.Flags().Bool("skip-notify", false, "Do not notify watchers about the issue update")
 	cmd.Flags().Bool("web", false, "Open in web browser after successful update")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")

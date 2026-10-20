@@ -1,6 +1,7 @@
 package jira
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -28,5 +29,26 @@ func TestEdit(t *testing.T) {
 
 	expectedQueryParams = "notifyUsers=false"
 	err = client.Edit("TEST-1", &EditRequest{ParentIssueKey: "EPIC-1", SkipNotify: true})
+	assert.NoError(t, err)
+}
+
+func TestEditOriginalEstimate(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "PUT", r.Method)
+
+		body, err := io.ReadAll(r.Body)
+		assert.NoError(t, err)
+		assert.JSONEq(t,
+			`{"update":{},"fields":{"parent":{},"timetracking":{"originalEstimate":"2d"}}}`,
+			string(body),
+		)
+
+		w.WriteHeader(204)
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	err := client.Edit("TEST-1", &EditRequest{OriginalEstimate: "2d"})
 	assert.NoError(t, err)
 }

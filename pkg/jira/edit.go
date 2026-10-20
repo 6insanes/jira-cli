@@ -21,15 +21,16 @@ type EditResponse struct {
 // EditRequest struct holds request data for edit request.
 // Setting an Assignee requires an account ID.
 type EditRequest struct {
-	IssueType       string
-	ParentIssueKey  string
-	Summary         string
-	Body            string
-	Priority        string
-	Labels          []string
-	Components      []string
-	FixVersions     []string
-	AffectsVersions []string
+	IssueType        string
+	ParentIssueKey   string
+	Summary          string
+	Body             string
+	Priority         string
+	Labels           []string
+	Components       []string
+	FixVersions      []string
+	AffectsVersions  []string
+	OriginalEstimate string
 	// CustomFields holds all custom fields passed
 	// while editing the issue.
 	CustomFields map[string]string
@@ -164,6 +165,9 @@ type editRequest struct {
 			Key string `json:"key,omitempty"`
 			Set string `json:"set,omitempty"`
 		} `json:"parent,omitempty"`
+		TimeTracking *struct {
+			OriginalEstimate string `json:"originalEstimate,omitempty"`
+		} `json:"timetracking,omitempty"`
 	} `json:"fields"`
 }
 
@@ -335,11 +339,19 @@ func getRequestDataForEdit(req *EditRequest) *editRequest {
 			Key string `json:"key,omitempty"`
 			Set string `json:"set,omitempty"`
 		} `json:"parent,omitempty"`
+		TimeTracking *struct {
+			OriginalEstimate string `json:"originalEstimate,omitempty"`
+		} `json:"timetracking,omitempty"`
 	}{
 		Parent: &struct {
 			Key string `json:"key,omitempty"`
 			Set string `json:"set,omitempty"`
 		}{},
+	}
+	if req.OriginalEstimate != "" {
+		fields.TimeTracking = &struct {
+			OriginalEstimate string `json:"originalEstimate,omitempty"`
+		}{OriginalEstimate: req.OriginalEstimate}
 	}
 	if req.ParentIssueKey != "" {
 		if req.ParentIssueKey == AssigneeNone {
