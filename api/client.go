@@ -213,6 +213,26 @@ func ProxyTransitions(c *jira.Client, key string) ([]*jira.Transition, error) {
 	return transitions, err
 }
 
+// ProxyIssueAttachments uses either v2 or v3 version of the GET /issue/{key}
+// endpoint to fetch attachment metadata of an issue.
+// Defaults to v3 if installation type is not defined in the config.
+func ProxyIssueAttachments(c *jira.Client, key string) ([]*jira.Attachment, error) {
+	var (
+		attachments []*jira.Attachment
+		err         error
+	)
+
+	it := viper.GetString("installation")
+
+	if it == jira.InstallationTypeLocal {
+		attachments, err = c.AttachmentsV2(key)
+	} else {
+		attachments, err = c.Attachments(key)
+	}
+
+	return attachments, err
+}
+
 // ProxyWatchIssue uses either a v2 or v3 version of the PUT /issue/{key}/watchers
 // endpoint to assign an issue to the user. Defaults to v3 if installation type is
 // not defined in the config.

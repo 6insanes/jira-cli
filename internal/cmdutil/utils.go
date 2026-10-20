@@ -115,6 +115,23 @@ func FormatDateTimeHuman(dt, format string) string {
 	return t.Format("Mon, 02 Jan 06")
 }
 
+// HumanizeBytes formats a byte count as a human readable string.
+func HumanizeBytes(size int64) string {
+	const unit = 1024
+
+	if size < unit {
+		return fmt.Sprintf("%d B", size)
+	}
+
+	div, exp := int64(unit), 0
+	for n := size / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+
+	return fmt.Sprintf("%.1f %ciB", float64(size)/float64(div), "KMGTPE"[exp])
+}
+
 // GetConfigHome returns the config home directory.
 func GetConfigHome() (string, error) {
 	home := os.Getenv("XDG_CONFIG_HOME")

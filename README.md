@@ -551,6 +551,42 @@ $ jira issue worklog add ISSUE-1 "2d 3h 30m" --no-input
 $ jira issue worklog add ISSUE-1 "10m" --comment "This is a comment" --no-input
 ```
 
+#### Attachment
+The `attachment` command provides a list of sub-commands to work with issue attachments.
+
+##### List
+The `list` command prints attachments of an issue with their id, name, size and author.
+
+```sh
+# List attachments of an issue
+$ jira issue attachment list ISSUE-1
+
+# Get the data in plain format
+$ jira issue attachment list ISSUE-1 --plain
+
+# Get the data in raw json format
+$ jira issue attachment list ISSUE-1 --raw
+```
+
+##### Download
+The `download` command saves attachments of an issue into a local directory. Without explicit file names or ids,
+all attachments of the issue are downloaded. Existing files are skipped unless `--overwrite` is passed.
+
+```sh
+# Download all attachments of an issue into the current directory
+$ jira issue attachment download ISSUE-1
+
+# Download a single attachment by name or id
+$ jira issue attachment download ISSUE-1 screenshot.png
+$ jira issue attachment download ISSUE-1 10700
+
+# Download all attachments into a specific directory
+$ jira issue attachment download ISSUE-1 --all -d ./attachments
+
+# Overwrite files that already exist
+$ jira issue attachment download ISSUE-1 --overwrite
+```
+
 ### Epic
 Epics are displayed in an explorer view by default. You can output the results in a table view using the `--table` flag.
 When viewing epic issues, you can use all filters available for the issue command.

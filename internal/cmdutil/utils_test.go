@@ -264,3 +264,23 @@ func TestGetSubtaskHandle(t *testing.T) {
 		})
 	}
 }
+
+func TestHumanizeBytes(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		size     int64
+		expected string
+	}{
+		{0, "0 B"},
+		{512, "512 B"},
+		{1024, "1.0 KiB"},
+		{82976, "81.0 KiB"},
+		{1024 * 1024, "1.0 MiB"},
+		{3 * 1024 * 1024 * 1024, "3.0 GiB"},
+	}
+
+	for _, tc := range cases {
+		assert.Equal(t, tc.expected, HumanizeBytes(tc.size))
+	}
+}
