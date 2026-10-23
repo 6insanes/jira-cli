@@ -4,6 +4,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/worklog/add"
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/worklog/delete"
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/worklog/edit"
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/worklog/list"
 )
 
 const helpText = `Worklog command helps you manage issue worklogs. See available commands below.`
@@ -18,7 +21,12 @@ func NewCmdWorklog() *cobra.Command {
 		RunE:    comment,
 	}
 
-	cmd.AddCommand(add.NewCmdWorklogAdd())
+	cmd.AddCommand(
+		add.NewCmdWorklogAdd(),
+		list.NewCmdWorklogList(),
+		edit.NewCmdWorklogEdit(),
+		delete.NewCmdWorklogDelete(),
+	)
 
 	return &cmd
 }

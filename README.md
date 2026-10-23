@@ -551,6 +551,42 @@ $ jira issue worklog add ISSUE-1 "2d 3h 30m" --no-input
 $ jira issue worklog add ISSUE-1 "10m" --comment "This is a comment" --no-input
 ```
 
+##### List
+The `list` command prints worklogs of an issue with their id, start time, time spent, author and comment.
+
+```sh
+# List worklogs of an issue
+$ jira issue worklog list ISSUE-1
+
+# Get the data in plain format
+$ jira issue worklog list ISSUE-1 --plain
+
+# Get the data in raw json format
+$ jira issue worklog list ISSUE-1 --raw
+```
+
+##### Edit
+The `edit` command updates a worklog of an issue. Without a worklog id, the command lets you pick a worklog interactively. Flags that are not passed keep the current value.
+
+```sh
+# Edit a worklog interactively
+$ jira issue worklog edit ISSUE-1
+
+# Update time spent and comment of a worklog
+$ jira issue worklog edit ISSUE-1 10001 --time-spent "1h 30m" --comment "Updated comment" --no-input
+```
+
+##### Delete
+The `delete` command removes a worklog from an issue. Without a worklog id, the command lets you pick a worklog interactively.
+
+```sh
+# Delete a worklog interactively
+$ jira issue worklog delete ISSUE-1
+
+# Delete a worklog by its id
+$ jira issue worklog delete ISSUE-1 10001 --no-input
+```
+
 #### Attachment
 The `attachment` command provides a list of sub-commands to work with issue attachments.
 
