@@ -80,7 +80,6 @@ func move(cmd *cobra.Command, args []string) {
 		defer s.Stop()
 
 		trFieldsReq := jira.TransitionRequestFields{}
-		trUpdateReq := jira.TransitionRequestUpdate{}
 
 		if mc.params.assignee != "" {
 			trFieldsReq.Assignee = &struct {
@@ -92,21 +91,9 @@ func move(cmd *cobra.Command, args []string) {
 				Name string `json:"name"`
 			}{Name: mc.params.resolution}
 		}
-		if mc.params.comment != "" {
-			trUpdateReq.Comment = []struct {
-				Add struct {
-					Body string `json:"body"`
-				} `json:"add"`
-			}{
-				{Add: struct {
-					Body string `json:"body"`
-				}{Body: mc.params.comment}},
-			}
-		}
 
 		_, err := client.Transition(mc.params.key, &jira.TransitionRequest{
 			Fields: &trFieldsReq,
-			Update: &trUpdateReq,
 			Transition: &jira.TransitionRequestData{
 				ID:   tr.ID.String(),
 				Name: tr.Name,
@@ -119,6 +106,23 @@ func move(cmd *cobra.Command, args []string) {
 	server := viper.GetString("server")
 
 	cmdutil.Success("Issue transitioned to state %q", tr.Name)
+
+	// Jira silently drops update.comment when the transition screen has no comment
+	// field, so the comment is added with a dedicated API call after the transition.
+	if mc.params.comment != "" {
+		err = func() error {
+			s := cmdutil.Info("Adding comment to the issue...")
+			defer s.Stop()
+
+			return client.AddIssueComment(mc.params.key, mc.params.comment, false)
+		}()
+		if err != nil {
+			cmdutil.Warn("Issue transitioned, but the comment could not be added.")
+			cmdutil.ExitIfError(err)
+		}
+		cmdutil.Success("Comment added to issue %q", mc.params.key)
+	}
+
 	fmt.Printf("%s\n", cmdutil.GenerateServerBrowseURL(server, mc.params.key))
 
 	if web, _ := cmd.Flags().GetBool("web"); web {
