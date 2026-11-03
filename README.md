@@ -534,6 +534,42 @@ comment body template
 EOF
 ```
 
+##### List
+The `list` command prints comments of an issue with their id, author, creation date and body.
+
+```sh
+# List comments of an issue
+$ jira issue comment list ISSUE-1
+
+# Get the data in plain format
+$ jira issue comment list ISSUE-1 --plain
+
+# Get the data in raw json format
+$ jira issue comment list ISSUE-1 --raw
+```
+
+##### Edit
+The `edit` command updates a comment of an issue. Without a comment id, the command lets you pick a comment interactively. When the body is not passed, the command opens an editor prefilled with the current body.
+
+```sh
+# Edit a comment interactively
+$ jira issue comment edit ISSUE-1
+
+# Update a comment by its id
+$ jira issue comment edit ISSUE-1 10001 --body "Updated comment" --no-input
+```
+
+##### Delete
+The `delete` command removes a comment from an issue. Without a comment id, the command lets you pick a comment interactively.
+
+```sh
+# Delete a comment interactively
+$ jira issue comment delete ISSUE-1
+
+# Delete a comment by its id
+$ jira issue comment delete ISSUE-1 10001 --no-input
+```
+
 #### Worklog
 The `worklog` command provides a list of sub-commands to manage issue worklog (timelog).
 
