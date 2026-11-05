@@ -2,10 +2,11 @@
 
 ## Commands
 
-- Build: `make build` (writes `./jira`).
 - Test: `go test ./...`.
 - Lint: `make lint`.
-- Install locally: `install -m755 jira ~/.local/bin/jira`.
+- Install locally: `make install VERSION=$(git describe --tags --exact-match)` then
+  `install -m755 "$(go env GOPATH)/bin/jira" ~/.local/bin/jira`. `make build` only compiles and
+  writes no binary.
 
 ## Git
 

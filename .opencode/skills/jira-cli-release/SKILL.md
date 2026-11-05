@@ -63,34 +63,43 @@ GITHUB_TOKEN=$(gh auth token) docker run --rm \
 `goreleaser check` reports a deprecation warning for `brews` — this is expected and does not
 block the release. The created release is a DRAFT (config `draft: true`).
 
-5. Publish the draft. `gh` resolves the repository from `origin`, so `-R` MUST be passed:
+5. Publish the draft. `gh` resolves the repository from `origin`, so `-R` MUST be passed.
+   GoReleaser leaves the body empty and marks the hyphenated tag as a prerelease, so the body,
+   the prerelease flag and the latest marker MUST be set here in one call:
 
 ```bash
-gh release edit "$TAG" -R 6insanes/jira-cli --draft=false
+gh release edit "$TAG" -R 6insanes/jira-cli \
+  --draft=false --prerelease=false --latest \
+  --notes-file /tmp/jira-release-notes.md
 gh release view "$TAG" -R 6insanes/jira-cli
 ```
 
 6. Build and install locally with the release version embedded:
 
 ```bash
-make build VERSION="$TAG"
-install -m755 jira ~/.local/bin/jira
+make install VERSION="$TAG"
+install -m755 "$(go env GOPATH)/bin/jira" ~/.local/bin/jira
 jira version
 ```
 
-`make build` writes `./jira` (ignored via `.git/info/exclude`) and needs network access only
-if modules changed. `~/go/bin` also exists in PATH; `~/.local/bin` takes precedence, so the
-install above is the binary that runs.
+`make install` puts the binary in `$(go env GOPATH)/bin`; `~/.local/bin` takes precedence in
+PATH, so the copy above is the binary that runs. `make build` (`go build ./...`) only compiles
+and writes NO binary.
 
 ## Checks after the release
 
 ```bash
+gh release view "$TAG" -R 6insanes/jira-cli
 jira issue view --help | grep -- '--comments'
 jira issue view <KEY> --plain --transitions=false | head
 ```
 
-The help output MUST match the new defaults, and plain output MUST contain no ANSI escapes
-(`grep -c $'\x1b'` returns 0).
+- The release MUST be published (`draft: false`, `prerelease: false`), carry the body and the
+  `Latest` marker.
+- The Linux archive MUST contain the binary at `<tag>_linux_x86_64/bin/jira`; install snippets
+  in the release body MUST point to that path (goreleaser uses `binary: bin/jira`).
+- Help output MUST match the new defaults, and plain output MUST contain no ANSI escapes
+  (`grep -c $'\x1b'` returns 0).
 
 ## Failure handling
 
