@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+//nolint:dupl // test scaffolding mirrors the comment test on purpose.
 func TestGetIssueWorklogs(t *testing.T) {
 	var unexpectedStatusCode bool
 
