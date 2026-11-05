@@ -56,7 +56,7 @@ func NewCmdCommentAdd() *cobra.Command {
 	cmd.Flags().Bool("web", false, "Open issue in web browser after adding comment")
 	cmd.Flags().StringP("template", "T", "", "Path to a file to read comment body from")
 	cmd.Flags().Bool("no-input", false, "Disable prompt for non-required fields")
-	cmd.Flags().Bool("internal", false, "Make comment internal")
+	cmd.Flags().Bool("internal", false, "Make comment internal (Jira Service Management only)")
 
 	return &cmd
 }

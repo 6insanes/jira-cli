@@ -212,6 +212,13 @@ func gray256(msg string) string {
 	return fmt.Sprintf("\x1b[38;5;242m%s\x1b[m", msg)
 }
 
+var ansiEscape = regexp.MustCompile(`\x1b\[[0-9;]*m`)
+
+// stripANSI removes ANSI color sequences so plain output stays machine-readable.
+func stripANSI(msg string) string {
+	return ansiEscape.ReplaceAllString(msg, "")
+}
+
 func shortenAndPad(msg string, limit int) string {
 	if limit > 1 && len(msg) > limit {
 		return msg[0:limit-1] + "…"

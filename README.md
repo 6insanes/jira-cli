@@ -426,12 +426,15 @@ $ jira issue view ISSUE-1
 
 ![View an issue](.github/assets/view.gif)
 
-The view screen will display linked issues and the latest comment after the description. Note that the displayed comment may
-not be the latest one if you for some reason have more than 5k comments in a ticket.
+The view screen will display linked issues, the available transitions and the last 10 comments after the description. Note that the displayed comments may
+not be the latest ones if you for some reason have more than 5k comments in a ticket.
 
 ```sh
-# Show 5 recent comments when viewing the issue
-$ jira issue view ISSUE-1 --comments 5
+# Show 25 recent comments when viewing the issue
+$ jira issue view ISSUE-1 --comments 25
+
+# Hide the comments block
+$ jira issue view ISSUE-1 --comments 0
 ```
 
 #### Link

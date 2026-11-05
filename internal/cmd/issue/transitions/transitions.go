@@ -14,7 +14,11 @@ import (
 )
 
 const (
-	helpText = `Transitions lists available transitions for an issue with their target states.`
+	helpText = `Transitions lists available transitions for an issue with their target states.
+
+Pass the transition name (the left side) to 'jira issue move'; it may differ from the target
+status name. The available list depends only on the current status and changes after every
+move, so re-fetch it after each transition.`
 	examples = `$ jira issue transitions ISSUE-1
 
 # Get the data in plain format

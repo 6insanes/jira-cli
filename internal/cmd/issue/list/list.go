@@ -24,7 +24,13 @@ You can combine different flags to create a unique query. For instance,
 $ jira issue list -yHigh -s"In Progress" --created month -lbackend -l"high prio"
 
 You can also add an optional search query as a positional argument, which functions the same
-as entering a search query into the Jira UI's search box.
+as entering a search query into the Jira UI's search box. It searches INSIDE the configured
+project; it is not a project key. Select the project with -p <KEY>:
+
+$ jira issue list -p OTHER "Feature Request"
+
+A raw JQL query passed with -q runs in the configured project context. If the query contains
+its own "project" filter, that filter replaces the configured project.
 
 Issues are displayed in an interactive list view by default. You can use a --plain flag
 to display output in a plain text mode. A --no-headers flag will hide the table headers
@@ -235,7 +241,8 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().String("updated-after", "", "Filter by issues updated after certain date")
 	cmd.Flags().String("created-before", "", "Filter by issues created before certain date")
 	cmd.Flags().String("updated-before", "", "Filter by issues updated before certain date")
-	cmd.Flags().StringP("jql", "q", "", "Run a raw JQL query in a given project context")
+	cmd.Flags().StringP("jql", "q", "", "Run a raw JQL query in a given project context.\n"+
+		"ORDER BY must not be used here: the CLI appends its own ordering, use --order-by instead")
 	cmd.Flags().String("order-by", "created", "Field to order the list with")
 	cmd.Flags().Bool("reverse", false, "Reverse the display order (default \"DESC\")")
 	cmd.Flags().String("paginate", "0:100", "Paginate the result. Max 100 at a time, format: <from>:<limit> where <from> is optional")
@@ -243,7 +250,7 @@ func SetFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("no-headers", false, "Don't display table headers in plain mode. Works only with --plain")
 	cmd.Flags().Bool("no-truncate", false, "Show all available columns in plain mode. Works only with --plain")
 	cmd.Flags().String("delimiter", "\t", "Custom delimiter for columns in plain mode. Works only with --plain")
-	cmd.Flags().Uint("comments", 1, "Show N comments when viewing the issue")
+	cmd.Flags().Uint("comments", 1, "Show N latest comments in the interactive detail view (0 hides them)")
 	cmd.Flags().Bool("raw", false, "Print raw JSON output")
 	cmd.Flags().Bool("csv", false, "Print output in CSV format")
 

@@ -16,8 +16,14 @@ import (
 )
 
 const (
-	helpText = `Move transitions an issue from one state to another.`
-	examples = `$ jira issue move ISSUE-1 "In Progress"
+	helpText = `Move transitions an issue from one state to another.
+
+The positional argument is a TRANSITION name, which may differ from the target status name
+(e.g. the transition "Выкатить на дев" leads to the status "На тестировании"). Run
+'jira issue transitions ISSUE-KEY' first to see the transitions available for the current
+status; they change after every move, so re-fetch them after each transition.`
+	examples = `$ jira issue transitions ISSUE-1
+$ jira issue move ISSUE-1 "In Progress"
 $ jira issue move ISSUE-1 Done`
 
 	optionCancel = "Cancel"
@@ -26,14 +32,14 @@ $ jira issue move ISSUE-1 Done`
 // NewCmdMove is a move command.
 func NewCmdMove() *cobra.Command {
 	cmd := cobra.Command{
-		Use:     "move ISSUE-KEY STATE",
+		Use:     "move ISSUE-KEY TRANSITION",
 		Short:   "Transition an issue to a given state",
 		Long:    helpText,
 		Example: examples,
 		Aliases: []string{"transition", "mv"},
 		Annotations: map[string]string{
 			"help:args": `ISSUE-KEY	Issue key, eg: ISSUE-1
-STATE		State you want to transition the issue to`,
+TRANSITION	Transition name from 'jira issue transitions' (may differ from the target status)`,
 		},
 		Run: move,
 	}

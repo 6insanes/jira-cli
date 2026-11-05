@@ -475,7 +475,7 @@ func (i Issue) footer() string {
 		if i.Display.Plain {
 			out.WriteString("\n")
 		}
-		fmt.Fprintf(&out, "%s\n", gray("Use --comments <limit> with `jira issue view` to load more comments"))
+		fmt.Fprintf(&out, "%s\n", gray("Use --comments N with `jira issue view` to load more comments"))
 	}
 	if i.Display.Plain {
 		out.WriteString("\n")
@@ -498,6 +498,6 @@ func (i Issue) renderPlain(w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	_, err = fmt.Fprint(w, out)
+	_, err = fmt.Fprint(w, stripANSI(out))
 	return err
 }

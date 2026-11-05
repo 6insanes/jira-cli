@@ -14,14 +14,21 @@ import (
 )
 
 const (
-	helpText = `View displays contents of an issue.`
+	helpText = `View displays contents of an issue.
+
+The last 10 comments and the available transitions are printed by default. Use --comments
+to change how many comments are shown (0 hides the block) and --transitions=false to skip
+the transitions lookup.`
 	examples = `$ jira issue view ISSUE-1
 
-# Show 5 recent comments when viewing the issue
-$ jira issue view ISSUE-1 --comments 5
+# Show 25 recent comments when viewing the issue
+$ jira issue view ISSUE-1 --comments 25
+
+# Hide the comments block
+$ jira issue view ISSUE-1 --comments 0
 
 # Skip fetching available transitions
-$ jira issue view ISSUE-1 --no-transitions
+$ jira issue view ISSUE-1 --transitions=false
 
 # Get the raw JSON data
 $ jira issue view ISSUE-1 --raw`
@@ -34,6 +41,8 @@ $ jira issue view ISSUE-1 --raw`
 
 	configProject = "project.key"
 	configServer  = "server"
+
+	defaultNumComments = 10
 
 	messageFetchingData = "Fetching issue details..."
 )
@@ -53,8 +62,8 @@ func NewCmdView() *cobra.Command {
 		Run:  view,
 	}
 
-	cmd.Flags().Uint(flagComments, 1, "Show N comments")
-	cmd.Flags().Bool(flagPlain, false, "Display output in plain mode")
+	cmd.Flags().Uint(flagComments, defaultNumComments, "Show N latest comments (0 hides them)")
+	cmd.Flags().Bool(flagPlain, false, "Print plain text without colors or pager (suitable for scripts)")
 	cmd.Flags().Bool(flagTransitions, true, "Fetch available transitions")
 	cmd.Flags().Bool(flagRaw, false, "Print raw Jira API response")
 
@@ -95,12 +104,14 @@ func viewPretty(cmd *cobra.Command, args []string) {
 	cmdutil.ExitIfError(err)
 
 	var comments uint
-	if cmd.Flags().Changed(flagComments) {
+	switch {
+	case cmd.Flags().Changed(flagComments):
 		comments, err = cmd.Flags().GetUint(flagComments)
 		cmdutil.ExitIfError(err)
-	} else {
-		numComments := viper.GetUint("num_comments")
-		comments = max(numComments, 1)
+	case viper.IsSet("num_comments"):
+		comments = viper.GetUint("num_comments")
+	default:
+		comments = defaultNumComments
 	}
 
 	key := cmdutil.GetJiraIssueKey(viper.GetString(configProject), args[0])

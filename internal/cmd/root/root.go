@@ -105,10 +105,7 @@ func NewCmdRoot() *cobra.Command {
 	)
 	cmd.PersistentFlags().StringP(
 		"project", "p", "",
-		fmt.Sprintf(
-			"Jira project to look into (defaults to %s/%s/%s.yml)",
-			configHome, jiraConfig.Dir, jiraConfig.FileName,
-		),
+		"Jira project to look into (defaults to the project key stored in the config file)",
 	)
 	cmd.PersistentFlags().BoolVar(&debug, "debug", false, "Turn on debug output")
 
