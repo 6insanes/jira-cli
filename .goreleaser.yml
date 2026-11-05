@@ -2,6 +2,10 @@ version: 2
 project_name: jira
 
 release:
+  # origin points to the upstream ankitpokhrel/jira-cli, so pin publishing to the fork.
+  github:
+    owner: 6insanes
+    name: jira-cli
   prerelease: auto
   name_template: "v{{.Version}}"
   draft: true
