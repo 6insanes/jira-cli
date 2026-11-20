@@ -5,6 +5,7 @@ import (
 
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/attachment/download"
 	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/attachment/list"
+	"github.com/ankitpokhrel/jira-cli/internal/cmd/issue/attachment/upload"
 )
 
 const helpText = `Attachment command helps you manage issue attachments. See available commands below.`
@@ -22,6 +23,7 @@ func NewCmdAttachment() *cobra.Command {
 	cmd.AddCommand(
 		list.NewCmdAttachmentList(),
 		download.NewCmdAttachmentDownload(),
+		upload.NewCmdAttachmentUpload(),
 	)
 
 	return &cmd

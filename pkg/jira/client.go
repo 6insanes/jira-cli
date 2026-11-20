@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -284,16 +285,24 @@ func (c *Client) DeleteV2(ctx context.Context, path string, headers Header) (*ht
 }
 
 func (c *Client) request(ctx context.Context, method, endpoint string, body []byte, headers Header) (*http.Response, error) {
+	return c.requestStream(ctx, method, endpoint, bytes.NewReader(body), int64(len(body)), headers)
+}
+
+func (c *Client) requestStream(
+	ctx context.Context, method, endpoint string, body io.Reader, size int64, headers Header,
+) (*http.Response, error) {
 	var (
 		req *http.Request
 		res *http.Response
 		err error
 	)
 
-	req, err = http.NewRequest(method, endpoint, bytes.NewReader(body))
+	req, err = http.NewRequest(method, endpoint, body)
 	if err != nil {
 		return nil, err
 	}
+
+	req.ContentLength = size
 
 	defer func() {
 		if c.debug {

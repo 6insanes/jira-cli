@@ -233,6 +233,17 @@ func ProxyIssueAttachments(c *jira.Client, key string) ([]*jira.Attachment, erro
 	return attachments, err
 }
 
+// ProxyUploadAttachment uses either v2 or v3 version of the POST /issue/{key}/attachments
+// endpoint to attach a local file to an issue.
+// Defaults to v3 if installation type is not defined in the config.
+func ProxyUploadAttachment(c *jira.Client, key, path string) (*jira.Attachment, error) {
+	if viper.GetString("installation") == jira.InstallationTypeLocal {
+		return c.UploadAttachmentV2(key, path)
+	}
+
+	return c.UploadAttachment(key, path)
+}
+
 // ProxyWatchIssue uses either a v2 or v3 version of the PUT /issue/{key}/watchers
 // endpoint to assign an issue to the user. Defaults to v3 if installation type is
 // not defined in the config.

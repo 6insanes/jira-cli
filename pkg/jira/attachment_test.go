@@ -2,9 +2,11 @@ package jira
 
 import (
 	"bytes"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -103,4 +105,91 @@ func TestDownloadAttachment(t *testing.T) {
 
 	err = client.DownloadAttachment(nil, &buf)
 	assert.Equal(t, ErrNoResult, err)
+}
+
+func TestUploadAttachment(t *testing.T) {
+	const filePerm = 0o600
+
+	var (
+		apiVersion2          bool
+		unexpectedStatusCode bool
+		emptyResponse        bool
+
+		gotName    string
+		gotContent []byte
+	)
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "screenshot one.png")
+
+	content := []byte("attachment-content")
+
+	assert.NoError(t, os.WriteFile(path, content, filePerm))
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if apiVersion2 {
+			assert.Equal(t, "/rest/api/2/issue/TEST/attachments", r.URL.Path)
+		} else {
+			assert.Equal(t, "/rest/api/3/issue/TEST/attachments", r.URL.Path)
+		}
+
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.Equal(t, "no-check", r.Header.Get("X-Atlassian-Token"))
+
+		f, hdr, err := r.FormFile("file")
+		assert.NoError(t, err)
+
+		if err == nil {
+			defer func() { _ = f.Close() }()
+
+			gotName = hdr.Filename
+			gotContent, err = io.ReadAll(f)
+			assert.NoError(t, err)
+		}
+
+		switch {
+		case unexpectedStatusCode:
+			w.WriteHeader(400)
+		case emptyResponse:
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(200)
+			_, _ = w.Write([]byte("[]"))
+		default:
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(200)
+			_, _ = w.Write([]byte(`[{"id":"10701","filename":"screenshot one.png","size":18,"mimeType":"image/png"}]`))
+		}
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{Server: server.URL}, WithTimeout(3*time.Second))
+
+	actual, err := client.UploadAttachment("TEST", path)
+	assert.NoError(t, err)
+	assert.Equal(t, "10701", actual.ID)
+	assert.Equal(t, "screenshot one.png", actual.Filename)
+	assert.Equal(t, int64(18), actual.Size)
+	assert.Equal(t, "screenshot one.png", gotName)
+	assert.Equal(t, content, gotContent)
+
+	emptyResponse = true
+
+	_, err = client.UploadAttachment("TEST", path)
+	assert.Equal(t, ErrNoResult, err)
+
+	emptyResponse = false
+	apiVersion2 = true
+	unexpectedStatusCode = true
+
+	_, err = client.UploadAttachmentV2("TEST", path)
+	assert.Error(t, &ErrUnexpectedResponse{}, err)
+
+	_, err = client.UploadAttachment("", path)
+	assert.Equal(t, ErrNoResult, err)
+
+	_, err = client.UploadAttachment("TEST", filepath.Join(dir, "missing.png"))
+	assert.Error(t, err)
+
+	_, err = client.UploadAttachment("TEST", dir)
+	assert.Error(t, err)
 }

@@ -662,6 +662,18 @@ $ jira issue attachment download ISSUE-1 --all -d ./attachments
 $ jira issue attachment download ISSUE-1 --overwrite
 ```
 
+##### Upload
+The `upload` command attaches local files to an issue. Multiple files can be passed in one go;
+each file is streamed to the server, so large files don't have to fit in memory.
+
+```sh
+# Upload a single file
+$ jira issue attachment upload ISSUE-1 screenshot.png
+
+# Upload multiple files at once
+$ jira issue attachment upload ISSUE-1 screenshot.png report.pdf
+```
+
 ### Epic
 Epics are displayed in an explorer view by default. You can output the results in a table view using the `--table` flag.
 When viewing epic issues, you can use all filters available for the issue command.
