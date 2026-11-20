@@ -101,9 +101,22 @@ package main
 
 import "fmt"
 
-func main\(\) {
-    fmt.Println\("hello world"\)
+func main() {
+    fmt.Println("hello world")
 }` + "```\n\n"
 
 	assert.Equal(t, expected, ToJiraMD(jfm))
+}
+
+func TestToJiraMDDoesNotEscapePlainText(t *testing.T) {
+	input := `Проверил (в скобках), из-за сбоя 2026-11-05, C++ и привет!`
+	assert.Equal(t, input, ToJiraMD(input))
+}
+
+func TestToJiraMDKeepsAutolinksBare(t *testing.T) {
+	assert.Equal(t, "https://example.com/browse/ABC-1", ToJiraMD("https://example.com/browse/ABC-1"))
+}
+
+func TestToJiraMDConvertsLabeledLinks(t *testing.T) {
+	assert.Equal(t, "[Example|https://example.com/]\n\n", ToJiraMD("[Example](https://example.com/)"))
 }

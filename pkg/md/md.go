@@ -1,7 +1,6 @@
 package md
 
 import (
-	cf "github.com/kentaro-m/blackfriday-confluence"
 	bf "github.com/russross/blackfriday/v2"
 
 	"github.com/ankitpokhrel/jira-cli/pkg/md/jirawiki"
@@ -13,7 +12,7 @@ func ToJiraMD(md string) string {
 		return md
 	}
 
-	renderer := &cf.Renderer{Flags: cf.IgnoreMacroEscaping}
+	renderer := newRenderer()
 	r := bf.New(bf.WithRenderer(renderer), bf.WithExtensions(bf.CommonExtensions))
 
 	return string(renderer.Render(r.Parse([]byte(md))))
